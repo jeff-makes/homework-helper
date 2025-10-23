@@ -435,73 +435,93 @@ export default function YetiMathPage(): JSX.Element {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 to-slate-100 text-slate-800 p-4">
-      <div className="max-w-4xl mx-auto">
-        <header className="mb-4 text-center">
-          <div className="font-mono text-xl sm:text-2xl md:text-3xl bg-slate-900 text-sky-100 rounded-2xl px-4 py-3 inline-block shadow">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+        <header className="text-center">
+          <div className="inline-block rounded-2xl bg-slate-900 px-4 py-3 font-mono text-lg text-sky-100 shadow sm:text-2xl md:text-3xl">
             ║ Y E T I  M A T H :  E V E R E S T ║
           </div>
         </header>
 
         {screen === "intro" && (
-          <section className="grid md:grid-cols-2 gap-6 items-start">
-            <div>
-              <p className="leading-relaxed">
-                You are a young Nepali climber with a bold plan: prove to your village that Yetis exist.
-                The only way is to summit Everest and bring back a sketch of what you saw.
-              </p>
-              <p className="mt-3">But the mountain is harsh. Earn FOOD and WATER by solving multiplication.</p>
+          <section className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-start">
+            <div className="flex flex-col gap-5">
+              <div className="rounded-2xl border bg-white/80 p-4 shadow-sm">
+                <p className="leading-relaxed">
+                  You are a young Nepali climber with a bold plan: prove to your village that Yetis exist.
+                  The only way is to summit Everest and bring back a sketch of what you saw.
+                </p>
+                <p className="mt-3">But the mountain is harsh. Earn FOOD and WATER by solving multiplication.</p>
+              </div>
 
-              <div className="mt-6">
+              <div className="rounded-2xl border bg-white/80 p-4 shadow-sm">
                 <label className="block text-sm font-semibold">Choose multiplication tables (1–10)</label>
-                <p className="text-xs text-slate-500 mb-1">Examples: <code>all</code> · <code>2,3,7</code> · <code>4-6</code> · <code>2,5,8-10</code></p>
+                <p className="mb-2 text-xs text-slate-500">
+                  Examples: <code>all</code> · <code>2,3,7</code> · <code>4-6</code> ·<code>2,5,8-10</code>
+                </p>
                 <input
-                  className="w-full font-mono rounded-xl border px-3 py-2 shadow-sm focus:outline-none focus:ring"
+                  className="w-full rounded-xl border px-3 py-2 font-mono shadow-sm focus:outline-none focus:ring"
                   value={tablesInput}
                   onChange={(event) => setTablesInput(event.target.value)}
                   placeholder="all"
                 />
                 <button
                   onClick={startGame}
-                  className="mt-4 px-4 py-2 rounded-2xl shadow bg-sky-600 text-white hover:bg-sky-700"
+                  className="mt-4 w-full rounded-2xl bg-sky-600 px-4 py-2 font-semibold text-white shadow hover:bg-sky-700 sm:w-auto"
                 >
                   Start Ascent
                 </button>
               </div>
 
-              <pre className="mt-6 text-xs leading-5 whitespace-pre border rounded-xl p-3 bg-white/70">{YETI}</pre>
+              <pre className="rounded-2xl border bg-white/80 p-3 text-[11px] leading-5 whitespace-pre shadow-sm sm:text-xs">{YETI}</pre>
             </div>
 
-            <pre className="font-mono text-sm md:text-base leading-5 whitespace-pre border rounded-2xl p-4 bg-white/70 shadow-inner select-none">{MOUNTAIN_ART}</pre>
+            <div className="rounded-2xl border bg-white/80 p-4 shadow-inner">
+              <pre className="max-h-[50vh] overflow-auto whitespace-pre text-[11px] font-mono leading-5 sm:text-xs md:text-sm">{MOUNTAIN_ART}</pre>
+            </div>
           </section>
         )}
-
         {screen === "play" && (
-          <section>
-            <div className="font-mono text-xs md:text-sm bg-white rounded-xl p-3 border shadow mb-3">{hud}</div>
-            <pre className="font-mono text-sm md:text-base leading-5 whitespace-pre border rounded-2xl p-4 bg-white shadow-inner select-none">{mountain}</pre>
-            <div className="mt-2 text-sm text-slate-700">{nextCamp}</div>
-            {campReached && <div className="mt-2 text-emerald-700 font-medium">{campReached}</div>}
+          <section className="flex flex-col gap-4">
+            <div className="rounded-xl border bg-white p-3 font-mono text-[11px] shadow sm:text-xs md:text-sm">{hud}</div>
+            <div className="overflow-hidden rounded-2xl border bg-white shadow-inner">
+              <pre className="max-h-[52vh] overflow-auto whitespace-pre px-2 py-4 text-[11px] font-mono leading-5 sm:text-xs md:text-sm select-none">{mountain}</pre>
+            </div>
+            <div className="text-sm text-slate-700">
+              <p>{nextCamp}</p>
+              {campReached && <p className="mt-1 font-medium text-emerald-700">{campReached}</p>}
+            </div>
 
-            <form onSubmit={handleSubmit} className="mt-4 flex items-center gap-3">
-              <label className="font-mono">Q)</label>
-              <span className="font-mono text-lg">{question}</span>
-              <input
-                ref={inputRef}
-                inputMode="numeric"
-                pattern="[0-9]*"
-                className="w-28 font-mono text-lg rounded-xl border px-3 py-2 shadow-sm focus:outline-none focus:ring disabled:opacity-60 disabled:cursor-not-allowed"
-                placeholder="answer"
-                value={userGuess}
-                onChange={(event) => setUserGuess(event.target.value.replace(/[^0-9-]/g, ""))}
-                aria-label="answer"
-                disabled={feedback !== "none"}
-              />
-              <button className="px-4 py-2 rounded-2xl shadow bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-60 disabled:cursor-not-allowed" type="submit" disabled={feedback !== "none"}>
-                Submit
-              </button>
+            <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-3 rounded-2xl border bg-white/80 p-3 shadow-sm sm:flex-nowrap">
+              <div className="flex items-center gap-2">
+                <label className="font-mono text-sm" htmlFor="yeti-answer">
+                  Q)
+                </label>
+                <span className="font-mono text-lg whitespace-pre">{question}</span>
+              </div>
+              <div className="flex flex-1 gap-3 sm:flex-none">
+                <input
+                  id="yeti-answer"
+                  ref={inputRef}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  className="h-11 w-full flex-1 rounded-xl border px-3 py-2 font-mono text-lg shadow-sm focus:outline-none focus:ring disabled:cursor-not-allowed disabled:opacity-60"
+                  placeholder="answer"
+                  value={userGuess}
+                  onChange={(event) => setUserGuess(event.target.value.replace(/[^0-9-]/g, ""))}
+                  aria-label="answer"
+                  disabled={feedback !== "none"}
+                />
+                <button
+                  className="h-11 rounded-2xl bg-sky-600 px-4 py-2 font-semibold text-white shadow disabled:cursor-not-allowed disabled:opacity-60 hover:bg-sky-700"
+                  type="submit"
+                  disabled={feedback !== "none"}
+                >
+                  Submit
+                </button>
+              </div>
               <button
                 type="button"
-                className="px-3 py-2 rounded-2xl shadow bg-slate-200 hover:bg-slate-300"
+                className="h-11 rounded-2xl bg-slate-200 px-3 py-2 shadow hover:bg-slate-300"
                 onClick={() => {
                   stopTimer();
                   if (toastRef.current) {
@@ -517,29 +537,28 @@ export default function YetiMathPage(): JSX.Element {
               </button>
             </form>
 
-            {message && <div className="mt-3 text-sm">{message}</div>}
+            {message && (
+              <div className="mt-3 rounded-xl border bg-white/90 p-3 text-sm shadow-sm">{message}</div>
+            )}
 
             {rescueTriggered && screen === "play" && (
-              <pre className="mt-3 text-xs leading-5 whitespace-pre border rounded-xl p-3 bg-white/80">
+              <pre className="mt-3 rounded-xl border bg-white/80 p-3 text-xs leading-5 whitespace-pre">
                 {HELICOPTER}
               </pre>
             )}
 
             {feedback === "incorrect" && (
-              <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-                <div className="bg-white rounded-2xl p-5 max-w-md w-[90%] shadow-xl border">
-                  <div className="text-lg font-semibold mb-2">Answer Check</div>
-                  <div className="text-sm leading-relaxed mb-4">{message}</div>
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                <div className="w-[90%] max-w-md rounded-2xl border bg-white p-5 shadow-xl">
+                  <div className="mb-2 text-lg font-semibold">Answer Check</div>
+                  <div className="mb-4 text-sm leading-relaxed">{message}</div>
                   {lastQuestion && lastCorrectAnswer != null && (
-                    <div className="text-sm text-slate-700 mb-4">
-                      Problem recap:{" "}
-                      <span className="font-semibold">
-                        {formatEquation(lastQuestion, lastCorrectAnswer)}
-                      </span>
+                    <div className="mb-4 text-sm text-slate-700">
+                      Problem recap: <span className="font-semibold">{formatEquation(lastQuestion, lastCorrectAnswer)}</span>
                     </div>
                   )}
                   <button
-                    className="px-4 py-2 rounded-2xl shadow bg-emerald-600 text-white hover:bg-emerald-700"
+                    className="rounded-2xl bg-emerald-600 px-4 py-2 text-white shadow hover:bg-emerald-700"
                     onClick={() => {
                       setFeedback("none");
                       nextTurn();
@@ -552,13 +571,12 @@ export default function YetiMathPage(): JSX.Element {
             )}
 
             {feedback === "correct" && (
-              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-4 py-2 rounded-full shadow-lg z-40">
+              <div className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 rounded-full bg-emerald-600 px-4 py-2 text-white shadow-lg">
                 ✅ Correct!
               </div>
             )}
           </section>
         )}
-
         {screen === "summary" && (
           <section className="bg-white border rounded-2xl p-4 shadow">
             <h2 className="text-xl font-semibold">Expedition Log</h2>
