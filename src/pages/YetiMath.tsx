@@ -1,13 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 const MAX_ALT = 8848;
-const LANES = 22;
 const STEP_GAIN_BASE = 260;
 const WRONG_PENALTY = 120;
 const FOOD_WATER_MAX = 10;
-const FOOD_WATER_TURN_DRAIN = 1;
 const FOOD_WATER_CORRECT_GAIN = 2;
 const FOOD_WATER_WRONG_LOSS = 2;
+const FOOD_WATER_TICK_INTERVAL = 4000;
 const TICK_MS = 250;
 
 const CAMPS: Array<[number, string]> = [
@@ -20,35 +19,48 @@ const CAMPS: Array<[number, string]> = [
 ];
 
 const MOUNTAIN_ART = String.raw`
-                   /\                 
-                  /  \                
-                 /\   \               
-                /  \   \              
-               /\   \   \             
-              /  \   \   \            
-             /\   \   \   \           
-            /  \   \   \   \          
-           /\   \   \   \   \         
-          /  \   \   \   \   \        
-         /\   \   \   \   \   \       
-        /  \   \   \   \   \   \      
-       /\   \   \   \   \   \   \     
-      /  \   \   \   \   \   \   \    
-     /\   \   \   \   \   \   \   \   
-    /  \   \   \   \   \   \   \   \  
-   /\   \   \   \   \   \   \   \   \ 
-  /  \   \   \   \   \   \   \   \   \
- /____\___\___\___\___\___\___\___\___\ 
+                      /\
+                     /  \
+                    /\   \
+                   /  \   \
+                  /\   \   \
+                 /  \   \   \
+                /\   \   \   \
+               /  \   \   \   \
+              /\   \   \   \   \
+             /  \   \   \   \   \
+            /\   \   \   \   \   \
+           /  \   \   \   \   \   \
+          /\   \   \   \   \   \   \
+         /  \   \   \   \   \   \   \
+        /\   \   \   \   \   \   \   \
+       /  \   \   \   \   \   \   \   \
+      /\   \   \   \   \   \   \   \   \
+     /  \   \   \   \   \   \   \   \   \
+    /\   \   \   \   \   \   \   \   \   \
+   /  \   \   \   \   \   \   \   \   \   \
+  /\   \   \   \   \   \   \   \   \   \   \
+ /  \   \   \   \   \   \   \   \   \   \   \
+/____\___\___\___\___\___\___\___\___\___\___\
 `;
+
+const MOUNTAIN_LINES = MOUNTAIN_ART.split("\n").filter((line) => line.trim() !== "").length;
 
 const YETI = String.raw`
       __     __
      /  \~~~/  \
  ,----(     ..    )
 /      \__     __/
-\_        \___/ 
-  \_____       \ 
+\_        \___/
+  \_____       \
         \_______\   ← Yeti???
+`;
+
+const HELICOPTER = String.raw`
+        __|__
+ --o--o--(_)--o--o--
+       /_/ \_\
+  Rescue from Base Camp!
 `;
 
 type ScreenState = "intro" | "play" | "summary";
@@ -91,7 +103,7 @@ function parseTablesChoice(input: string): number[] {
 
 function altitudeToLane(altitude: number): number {
   const ratio = Math.max(0, Math.min(1, altitude / MAX_ALT));
-  return Math.floor((1 - ratio) * (LANES - 1));
+  return Math.floor((1 - ratio) * (MOUNTAIN_LINES - 1));
 }
 
 function currentLevel(altitude: number): number {
@@ -188,9 +200,11 @@ export default function YetiMathPage(): JSX.Element {
 
   const [feedback, setFeedback] = useState<FeedbackState>("none");
   const [lastCorrectAnswer, setLastCorrectAnswer] = useState<number | null>(null);
+  const [rescueTriggered, setRescueTriggered] = useState(false);
 
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef<number | null>(null);
+  const drainAccumulatorRef = useRef(0);
   const [sessionBestAltitude, setSessionBestAltitude] = useState(0);
   const [sessionBestSummit, setSessionBestSummit] = useState<number | null>(null);
 
@@ -202,11 +216,7 @@ export default function YetiMathPage(): JSX.Element {
     }
   }, [screen, question]);
 
-  const nextTurn = (drain = true) => {
-    if (drain) {
-      setFood((previous) => Math.max(0, previous - FOOD_WATER_TURN_DRAIN));
-      setWater((previous) => Math.max(0, previous - FOOD_WATER_TURN_DRAIN));
-    }
+  const nextTurn = () => {
     const level = currentLevel(altitude);
     const { q, ans } = makeQuestion(tables, level);
     setQuestion(q);
@@ -217,13 +227,22 @@ export default function YetiMathPage(): JSX.Element {
 
   const startTimer = () => {
     setElapsed(0);
+    drainAccumulatorRef.current = 0;
     if (timerRef.current) {
       window.clearInterval(timerRef.current);
     }
-    timerRef.current = window.setInterval(
-      () => setElapsed((previous) => previous + TICK_MS / 1000),
-      TICK_MS,
-    );
+    timerRef.current = window.setInterval(() => {
+      setElapsed((previous) => previous + TICK_MS / 1000);
+      drainAccumulatorRef.current += TICK_MS;
+      if (drainAccumulatorRef.current >= FOOD_WATER_TICK_INTERVAL) {
+        const steps = Math.floor(drainAccumulatorRef.current / FOOD_WATER_TICK_INTERVAL);
+        drainAccumulatorRef.current -= steps * FOOD_WATER_TICK_INTERVAL;
+        if (steps > 0) {
+          setFood((previous) => Math.max(0, previous - steps));
+          setWater((previous) => Math.max(0, previous - steps));
+        }
+      }
+    }, TICK_MS);
   };
 
   const stopTimer = () => {
@@ -249,9 +268,10 @@ export default function YetiMathPage(): JSX.Element {
     setWater(FOOD_WATER_MAX);
     setStreak(0);
     setBestAltitude(0);
+    setRescueTriggered(false);
     setScreen("play");
     startTimer();
-    window.setTimeout(() => nextTurn(false), 0);
+    window.setTimeout(() => nextTurn(), 0);
   };
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -337,13 +357,18 @@ export default function YetiMathPage(): JSX.Element {
   }, [altitude]);
 
   useEffect(() => {
-    if (screen === "play" && (food === 0 || water === 0)) {
-      setMessage("You ran out of supplies and had to turn back. Rest and try again!");
+    if (screen === "play" && (food === 0 || water === 0) && !rescueTriggered) {
+      setRescueTriggered(true);
+      setMessage(
+        "🚁 Supplies depleted! Base camp swoops in with a helicopter before you become a popsicle.",
+      );
+      setFeedback("none");
+      setBestAltitude((previous) => Math.max(previous, altitude));
       stopTimer();
-      setSessionBestAltitude((previous) => Math.max(previous, bestAltitude));
-      window.setTimeout(() => setScreen("summary"), 600);
+      setSessionBestAltitude((previous) => Math.max(previous, bestAltitude, altitude));
+      window.setTimeout(() => setScreen("summary"), 1500);
     }
-  }, [food, water, screen, bestAltitude]);
+  }, [food, water, screen, bestAltitude, altitude, rescueTriggered]);
 
   useEffect(
     () => () => {
@@ -442,6 +467,12 @@ export default function YetiMathPage(): JSX.Element {
 
             {message && <div className="mt-3 text-sm">{message}</div>}
 
+            {rescueTriggered && screen === "play" && (
+              <pre className="mt-3 text-xs leading-5 whitespace-pre border rounded-xl p-3 bg-white/80">
+                {HELICOPTER}
+              </pre>
+            )}
+
             {feedback === "incorrect" && (
               <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
                 <div className="bg-white rounded-2xl p-5 max-w-md w-[90%] shadow-xl border">
@@ -512,6 +543,7 @@ export default function YetiMathPage(): JSX.Element {
                   setFeedback("none");
                   setScreen("intro");
                   setMessage("");
+                  setRescueTriggered(false);
                 }}
               >
                 Play Again
@@ -530,16 +562,19 @@ export default function YetiMathPage(): JSX.Element {
                   setStreak(0);
                   setBestAltitude(0);
                   setElapsed(0);
+                  setRescueTriggered(false);
                   setScreen("play");
                   startTimer();
-                  window.setTimeout(() => nextTurn(false), 0);
+                  window.setTimeout(() => nextTurn(), 0);
                 }}
               >
                 Rematch (same tables)
               </button>
             </div>
 
-            <pre className="mt-6 text-xs leading-5 whitespace-pre border rounded-xl p-3 bg-white/70">{YETI}</pre>
+            <pre className="mt-6 text-xs leading-5 whitespace-pre border rounded-xl p-3 bg-white/70">
+              {rescueTriggered ? HELICOPTER : YETI}
+            </pre>
           </section>
         )}
 
