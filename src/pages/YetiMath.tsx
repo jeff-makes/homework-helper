@@ -181,6 +181,24 @@ function makeQuestion(tables: number[], level: number): { q: string; ans: number
   return { q: `${table} × ${value} = ?`, ans: table * value };
 }
 
+function formatEquation(question: string, answer: number): string {
+  return question.replace("?", answer.toString());
+}
+
+function meterColorClass(value: number): string {
+  const ratio = value / FOOD_WATER_MAX;
+  if (ratio <= 0.2) {
+    return "text-red-600";
+  }
+  if (ratio <= 0.4) {
+    return "text-orange-500";
+  }
+  if (ratio <= 0.6) {
+    return "text-amber-500";
+  }
+  return "text-slate-900";
+}
+
 export default function YetiMathPage(): JSX.Element {
   const [screen, setScreen] = useState<ScreenState>("intro");
   const [tablesInput, setTablesInput] = useState("2,3,4-6");
@@ -200,6 +218,7 @@ export default function YetiMathPage(): JSX.Element {
 
   const [feedback, setFeedback] = useState<FeedbackState>("none");
   const [lastCorrectAnswer, setLastCorrectAnswer] = useState<number | null>(null);
+  const [lastQuestion, setLastQuestion] = useState<string>("");
   const [rescueTriggered, setRescueTriggered] = useState(false);
 
   const [elapsed, setElapsed] = useState(0);
@@ -287,6 +306,8 @@ export default function YetiMathPage(): JSX.Element {
     }
 
     if (guessNumber === answer) {
+      setLastCorrectAnswer(null);
+      setLastQuestion("");
       const level = currentLevel(altitude);
       const newStreak = streak + 1;
       const climb = gainForCorrect(level, newStreak);
@@ -324,9 +345,11 @@ export default function YetiMathPage(): JSX.Element {
       setStreak(0);
       setFood((previous) => Math.max(0, previous - FOOD_WATER_WRONG_LOSS));
       setWater((previous) => Math.max(0, previous - FOOD_WATER_WRONG_LOSS));
+      setLastQuestion(question);
       setLastCorrectAnswer(answer);
+      const equation = formatEquation(question, answer);
       setMessage(
-        `✖️ Not quite. Correct was ${answer}. You slip ${WRONG_PENALTY} m and lose supplies.`,
+        `💡 Almost! The mountain asked for ${equation}. You slip ${WRONG_PENALTY} m and drop some supplies, but you've got this.`,
       );
       setFeedback("incorrect");
     }
@@ -335,16 +358,45 @@ export default function YetiMathPage(): JSX.Element {
   const mountain = useMemo(() => renderMountain(altitude), [altitude]);
   const nextCamp = useMemo(() => nextCampText(altitude), [altitude]);
   const hud = useMemo(() => {
-    const foodBar = "█".repeat(food) + "·".repeat(FOOD_WATER_MAX - food);
-    const waterBar = "█".repeat(water) + "·".repeat(FOOD_WATER_MAX - water);
     const time = new Date(Math.floor(elapsed) * 1000).toISOString().substring(14, 19);
-    const summitBest =
+    const fastestSummit =
       sessionBestSummit != null
-        ? `  •  Fastest Summit: ${new Date(Math.floor(sessionBestSummit) * 1000)
-            .toISOString()
-            .substring(14, 19)}`
-        : "";
-    return `ALT: ${altitude} m / ${MAX_ALT} m    FOOD: ${foodBar}    WATER: ${waterBar}    STREAK: ${streak}  •  ⏱️ ${time}  •  Session Best: ${sessionBestAltitude} m${summitBest}`;
+        ? new Date(Math.floor(sessionBestSummit) * 1000).toISOString().substring(14, 19)
+        : null;
+
+    const renderMeter = (label: string, value: number) => {
+      const filled = "█".repeat(value);
+      const empty = "·".repeat(FOOD_WATER_MAX - value);
+      const colorClass = meterColorClass(value);
+      return (
+        <span className="flex items-center gap-1">
+          <span className={colorClass}>{label}:</span>
+          <span className="font-mono" aria-hidden="true">
+            {filled && <span className={colorClass}>{filled}</span>}
+            {empty && <span className="text-slate-300">{empty}</span>}
+          </span>
+          <span className="sr-only">
+            {label} {value} out of {FOOD_WATER_MAX}
+          </span>
+        </span>
+      );
+    };
+
+    return (
+      <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-1">
+        <span>
+          ALT: {altitude} m / {MAX_ALT} m
+        </span>
+        {renderMeter("FOOD", food)}
+        {renderMeter("WATER", water)}
+        <span>STREAK: {streak}</span>
+        <span>⏱️ {time}</span>
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span>Session Best: {sessionBestAltitude} m</span>
+          {fastestSummit && <span>• Fastest Summit: {fastestSummit}</span>}
+        </span>
+      </div>
+    );
   }, [altitude, food, water, streak, elapsed, sessionBestAltitude, sessionBestSummit]);
 
   const campReached = useMemo(() => {
@@ -477,10 +529,13 @@ export default function YetiMathPage(): JSX.Element {
               <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
                 <div className="bg-white rounded-2xl p-5 max-w-md w-[90%] shadow-xl border">
                   <div className="text-lg font-semibold mb-2">Answer Check</div>
-                  <div className="text-sm mb-4">{message}</div>
-                  {lastCorrectAnswer != null && (
+                  <div className="text-sm leading-relaxed mb-4">{message}</div>
+                  {lastQuestion && lastCorrectAnswer != null && (
                     <div className="text-sm text-slate-700 mb-4">
-                      Correct answer: <strong>{lastCorrectAnswer}</strong>
+                      Problem recap:{" "}
+                      <span className="font-semibold">
+                        {formatEquation(lastQuestion, lastCorrectAnswer)}
+                      </span>
                     </div>
                   )}
                   <button
