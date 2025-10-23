@@ -12,10 +12,6 @@ export default function App() {
         <nav className="border-b bg-white">
           <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-4">
             <Link to="/" className="font-semibold text-slate-800">Emma’s Homework Helper</Link>
-            <div className="ml-auto flex gap-3 text-sm">
-              <Link className="text-sky-700 hover:underline" to="/yeti-math">Yeti Math: Everest</Link>
-              {/* future games can go here */}
-            </div>
           </div>
         </nav>
       )}
