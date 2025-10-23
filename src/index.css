@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* optional: small tweaks for <pre> look in your game */
+pre { tab-size: 2; }
