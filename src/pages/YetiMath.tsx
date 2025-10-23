@@ -370,8 +370,8 @@ export default function YetiMathPage(): JSX.Element {
       const colorClass = meterColorClass(value);
       return (
         <span className="flex items-center gap-1">
-          <span className={colorClass}>{label}:</span>
-          <span className="font-mono" aria-hidden="true">
+          <span className={`text-xs sm:text-sm ${colorClass}`}>{label}:</span>
+          <span className="font-mono text-xs sm:text-sm" aria-hidden="true">
             {filled && <span className={colorClass}>{filled}</span>}
             {empty && <span className="text-slate-300">{empty}</span>}
           </span>
@@ -383,18 +383,22 @@ export default function YetiMathPage(): JSX.Element {
     };
 
     return (
-      <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-1">
-        <span>
-          ALT: {altitude} m / {MAX_ALT} m
-        </span>
-        {renderMeter("FOOD", food)}
-        {renderMeter("WATER", water)}
-        <span>STREAK: {streak}</span>
-        <span>⏱️ {time}</span>
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span>Session Best: {sessionBestAltitude} m</span>
-          {fastestSummit && <span>• Fastest Summit: {fastestSummit}</span>}
-        </span>
+      <div className="grid gap-y-1 gap-x-4 sm:grid-cols-2 sm:items-center">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="text-xs font-semibold sm:text-sm">
+            ALT: {altitude} m / {MAX_ALT} m
+          </span>
+          {renderMeter("FOOD", food)}
+          {renderMeter("WATER", water)}
+        </div>
+        <div className="flex flex-col gap-1 text-xs sm:items-end sm:text-sm sm:text-right">
+          <span>STREAK: {streak}</span>
+          <span>⏱️ {time}</span>
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 sm:justify-end">
+            <span>Session Best: {sessionBestAltitude} m</span>
+            {fastestSummit && <span>• Fastest Summit: {fastestSummit}</span>}
+          </span>
+        </div>
       </div>
     );
   }, [altitude, food, water, streak, elapsed, sessionBestAltitude, sessionBestSummit]);
@@ -434,18 +438,18 @@ export default function YetiMathPage(): JSX.Element {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 to-slate-100 text-slate-800 p-4">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 to-slate-100 px-3 py-4 text-slate-800 sm:px-6">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 sm:gap-6">
         <header className="text-center">
-          <div className="inline-block rounded-2xl bg-slate-900 px-4 py-3 font-mono text-lg text-sky-100 shadow sm:text-2xl md:text-3xl">
-            ║ Y E T I  M A T H :  E V E R E S T ║
+          <div className="inline-block rounded-2xl bg-slate-900 px-3 py-2 font-mono text-base tracking-wide text-sky-100 shadow sm:px-4 sm:py-2.5 sm:text-lg md:text-xl">
+            ║ YETI MATH: EVEREST ║
           </div>
         </header>
 
         {screen === "intro" && (
-          <section className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-start">
-            <div className="flex flex-col gap-5">
-              <div className="rounded-2xl border bg-white/80 p-4 shadow-sm">
+          <section className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-start">
+            <div className="flex flex-col gap-4">
+              <div className="rounded-2xl border bg-white/80 p-4 shadow-sm sm:p-5">
                 <p className="leading-relaxed">
                   You are a young Nepali climber with a bold plan: prove to your village that Yetis exist.
                   The only way is to summit Everest and bring back a sketch of what you saw.
@@ -453,7 +457,7 @@ export default function YetiMathPage(): JSX.Element {
                 <p className="mt-3">But the mountain is harsh. Earn FOOD and WATER by solving multiplication.</p>
               </div>
 
-              <div className="rounded-2xl border bg-white/80 p-4 shadow-sm">
+              <div className="rounded-2xl border bg-white/80 p-4 shadow-sm sm:p-5">
                 <label className="block text-sm font-semibold">Choose multiplication tables (1–10)</label>
                 <p className="mb-2 text-xs text-slate-500">
                   Examples: <code>all</code> · <code>2,3,7</code> · <code>4-6</code> ·<code>2,5,8-10</code>
@@ -472,39 +476,42 @@ export default function YetiMathPage(): JSX.Element {
                 </button>
               </div>
 
-              <pre className="rounded-2xl border bg-white/80 p-3 text-[11px] leading-5 whitespace-pre shadow-sm sm:text-xs">{YETI}</pre>
+              <pre className="rounded-2xl border bg-white/80 p-3 text-[10px] leading-[1.1rem] whitespace-pre shadow-sm sm:text-xs">{YETI}</pre>
             </div>
 
             <div className="rounded-2xl border bg-white/80 p-4 shadow-inner">
-              <pre className="max-h-[50vh] overflow-auto whitespace-pre text-[11px] font-mono leading-5 sm:text-xs md:text-sm">{MOUNTAIN_ART}</pre>
+              <pre className="whitespace-pre text-[9px] font-mono leading-4 sm:text-[10px] sm:leading-[1.15rem] md:text-sm md:leading-5">{MOUNTAIN_ART}</pre>
             </div>
           </section>
         )}
         {screen === "play" && (
-          <section className="flex flex-col gap-4">
-            <div className="rounded-xl border bg-white p-3 font-mono text-[11px] shadow sm:text-xs md:text-sm">{hud}</div>
-            <div className="overflow-hidden rounded-2xl border bg-white shadow-inner">
-              <pre className="max-h-[52vh] overflow-auto whitespace-pre px-2 py-4 text-[11px] font-mono leading-5 sm:text-xs md:text-sm select-none">{mountain}</pre>
+          <section className="flex flex-col gap-3 sm:gap-4">
+            <div className="rounded-xl border bg-white px-3 py-2 font-mono text-[10px] shadow sm:text-xs md:text-sm">{hud}</div>
+            <div className="rounded-2xl border bg-white shadow-inner">
+              <pre className="whitespace-pre px-2 py-3 text-[9px] font-mono leading-4 sm:px-3 sm:py-4 sm:text-[10px] sm:leading-[1.15rem] md:text-sm md:leading-5 select-none">{mountain}</pre>
             </div>
             <div className="text-sm text-slate-700">
               <p>{nextCamp}</p>
               {campReached && <p className="mt-1 font-medium text-emerald-700">{campReached}</p>}
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-3 rounded-2xl border bg-white/80 p-3 shadow-sm sm:flex-nowrap">
-              <div className="flex items-center gap-2">
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col gap-3 rounded-2xl border bg-white/80 p-3 shadow-sm sm:flex-row sm:items-center"
+            >
+              <div className="flex items-baseline gap-2 sm:items-center">
                 <label className="font-mono text-sm" htmlFor="yeti-answer">
                   Q)
                 </label>
-                <span className="font-mono text-lg whitespace-pre">{question}</span>
+                <span className="font-mono text-base whitespace-pre sm:text-lg">{question}</span>
               </div>
-              <div className="flex flex-1 gap-3 sm:flex-none">
+              <div className="flex w-full gap-2 sm:w-auto sm:flex-none">
                 <input
                   id="yeti-answer"
                   ref={inputRef}
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  className="h-11 w-full flex-1 rounded-xl border px-3 py-2 font-mono text-lg shadow-sm focus:outline-none focus:ring disabled:cursor-not-allowed disabled:opacity-60"
+                  className="h-10 w-full flex-1 rounded-xl border px-3 py-2 font-mono text-base shadow-sm focus:outline-none focus:ring disabled:cursor-not-allowed disabled:opacity-60 sm:h-11 sm:text-lg"
                   placeholder="answer"
                   value={userGuess}
                   onChange={(event) => setUserGuess(event.target.value.replace(/[^0-9-]/g, ""))}
@@ -512,7 +519,7 @@ export default function YetiMathPage(): JSX.Element {
                   disabled={feedback !== "none"}
                 />
                 <button
-                  className="h-11 rounded-2xl bg-sky-600 px-4 py-2 font-semibold text-white shadow disabled:cursor-not-allowed disabled:opacity-60 hover:bg-sky-700"
+                  className="h-10 rounded-2xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow disabled:cursor-not-allowed disabled:opacity-60 hover:bg-sky-700 sm:h-11 sm:text-base"
                   type="submit"
                   disabled={feedback !== "none"}
                 >
@@ -521,7 +528,7 @@ export default function YetiMathPage(): JSX.Element {
               </div>
               <button
                 type="button"
-                className="h-11 rounded-2xl bg-slate-200 px-3 py-2 shadow hover:bg-slate-300"
+                className="h-10 rounded-2xl bg-slate-200 px-3 py-2 text-sm shadow hover:bg-slate-300 sm:h-11 sm:text-base"
                 onClick={() => {
                   stopTimer();
                   if (toastRef.current) {
@@ -538,7 +545,7 @@ export default function YetiMathPage(): JSX.Element {
             </form>
 
             {message && (
-              <div className="mt-3 rounded-xl border bg-white/90 p-3 text-sm shadow-sm">{message}</div>
+              <div className="mt-2 rounded-xl border bg-white/90 p-3 text-sm shadow-sm">{message}</div>
             )}
 
             {rescueTriggered && screen === "play" && (
@@ -578,7 +585,7 @@ export default function YetiMathPage(): JSX.Element {
           </section>
         )}
         {screen === "summary" && (
-          <section className="bg-white border rounded-2xl p-4 shadow">
+          <section className="rounded-2xl border bg-white p-4 shadow">
             <h2 className="text-xl font-semibold">Expedition Log</h2>
             <p className="mt-2">
               Highest altitude (this run): <strong>{bestAltitude} m</strong>
@@ -651,7 +658,7 @@ export default function YetiMathPage(): JSX.Element {
           </section>
         )}
 
-        <footer className="mt-8 text-center text-xs text-slate-500">
+        <footer className="mt-6 text-center text-xs text-slate-500">
           Tip: You can type ranges like <code>4-7</code> or comma lists like <code>2,3,9</code>, or just <code>all</code>. Tables and questions cap at 10×10.
         </footer>
       </div>
